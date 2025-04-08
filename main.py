@@ -59,13 +59,21 @@ def get_products(db: Session = Depends(get_db)):
     return products
 
 @app.get("/api/products/{id}")
-def get_product_detail(db: Session = Depends(get_db)):
+def get_product_detail(id: int, db: Session = Depends(get_db)):
     query = text("SELECT * FROM products WHERE id = :id")
-    result = db.execute(query, {"id": id}).fetchone()
-   
-    if not result:
+    result = db.execute(query, {"id": id}) # Result object
+    row = result.fetchone() # Fetch the row
+    if not row:
         return HTTPException(status_code=404, detail="Not Found")
-    
-    return ProductModel(**dict(zip(result.keys(), result)))
+    keys = result.keys() # Get column names from "result"
+    return ProductModel(**dict(zip(keys, row)))
 
     
+### 2nd solution for get_product_detail
+# @app.get("/api/products/{id}")
+# def get_product_detail(id: int, db: Session = Depends(get_db)):
+#     query = text("SELECT * FROM products WHERE id = :id")
+#     result = db.execute(query, {"id": id}).fetchone()
+#     if not result:
+#         raise HTTPException(status_code=404, detail="Not Found")
+#     return ProductModel(**result._mapping)

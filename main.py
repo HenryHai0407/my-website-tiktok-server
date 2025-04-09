@@ -1,13 +1,12 @@
 from fastapi import FastAPI, Depends, HTTPException
-from sqlalchemy import create_engine, text
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 from pydantic import BaseModel
-
-DB_CONNECT_STRING = "mysql+pymysql://root:root@localhost:3306/my-website"
-engine = create_engine(DB_CONNECT_STRING)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+from database import get_db, Base, engine
+from models import User, Order
+from schemas import UserCreate, UserOut, OrderCreate, OrderOut
+from auth import get_password_hash, get_current_user, verify_password, create_access_token
+from fastapi.security import OAuth2PasswordRequestForm
 
 class ProductModel(BaseModel):
     id: int
@@ -16,15 +15,6 @@ class ProductModel(BaseModel):
     price: float | None = None
     quantity: int | None = None
     description: str | None = None
-
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 app = FastAPI()
 
@@ -77,3 +67,47 @@ def get_product_detail(id: int, db: Session = Depends(get_db)):
 #     if not result:
 #         raise HTTPException(status_code=404, detail="Not Found")
 #     return ProductModel(**result._mapping)
+
+
+### Add more features with POST, PUT, DELETE APIs
+
+# from fastapi.security import OAuth2PasswordRequestForm
+# from .auth import verify_password, create_access_token
+# User Registration (POST /users)
+@app.post("/users",response_model=UserOut)
+def create_user(user: UserCreate, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.username == user.username).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Username already registered")
+    hashed_password = get_password_hash(user.password)
+    new_user = User(username = user.username, hashed_password = hashed_password)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+# User Login (POST /login)
+# from fastapi.security import OAuth2PasswordRequestForm
+# from .auth import verify_password, create_access_token
+
+@app.post("/login")
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == form_data.username).first()
+    if not user or not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Incorrect username or password")
+    access_token = create_access_token(data={"sub": user.username})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+# Place Order (POST /orders)
+# from .models import Order
+# from .schemas import OrderCreate, OrderOut
+# from .auth import get_current_user
+
+@app.post("/orders", response_model=OrderOut)
+def create_order(order: OrderCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    new_order = Order(user_id=current_user.id, product_id=order.product_id, quantity=order.quantity)
+    db.add(new_order)
+    db.commit()
+    db.refresh(new_order)
+    return new_order

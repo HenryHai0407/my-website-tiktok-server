@@ -169,3 +169,7 @@ def delete_product(id: int, db: Session = Depends(get_db)):
     """)
     db.execute(query, {"id": id})
     db.commit()
+
+#### In terms of database, in general, most ecommerce website creates its database by manually setting up in 
+# database with SQL query instead of using ORM models, because when the application grows,
+# it is harder to manage and maintain ORM than database model.

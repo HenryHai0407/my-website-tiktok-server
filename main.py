@@ -15,6 +15,20 @@ class ProductModel(BaseModel):
     price: float | None = None
     quantity: int | None = None
     description: str | None = None
+    
+class ProductCreateRequest(BaseModel):
+    title: str
+    summary: str | None = None
+    price: float | None = None
+    quantity: int | None = None
+    description: str | None = None
+
+class ProductUpdateRequest(BaseModel):
+    title: str
+    summary: str | None = None
+    price: float | None = None
+    quantity: int | None = None
+    description: str | None = None
 
 app = FastAPI()
 
@@ -36,10 +50,6 @@ PRODUCTS = [
             "description": "Hello Summer"
             },
         ]
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
 
 @app.get("/api/products")
 def get_products(db: Session = Depends(get_db)):
@@ -111,3 +121,51 @@ def create_order(order: OrderCreate, db: Session = Depends(get_db), current_user
     db.commit()
     db.refresh(new_order)
     return new_order
+
+### ---- Lesson 4
+@app.post("/api/products")
+def create_product(product: ProductCreateRequest, db: Session = Depends(get_db)):
+    query = text("""
+    INSERT INTO products (
+                  title, summary, price, quantity, description
+                  )
+    VALUES (:title, :summary, :price, :quantity, :description)
+    """)
+    # db.execute(query,
+    #             {
+    #                 "title": product.title,
+    #                 "summary": product.summary,
+    #                 "price": product.price,
+    #                 "quantity": product.quantity,
+    #                 "description": product.description
+    #             })
+    db.execute(query, product.model_dump())
+    db.commit()
+
+# PUT apis
+@app.post("/api/products/{id}")
+def create_product(id: int, product: ProductCreateRequest, db: Session = Depends(get_db)):
+    query = text("""
+    UPDATE products
+                 SET
+                    summary = :summary,
+                    price = :price,
+                    quantity = :quantity,
+                    description: description
+                 WHERE
+                    id = :id
+    """)
+    values = product.dict()
+    values['id'] = id
+    db.execute(query, values)
+    db.commit()
+
+# DELETE apis
+@app.delete("/api/products/{id}")
+def delete_product(id: int, db: Session = Depends(get_db)):
+    query = text ("""
+                DELETE FROM products
+                WHERE id = :id
+    """)
+    db.execute(query, {"id": id})
+    db.commit()

@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from database import get_db, Base, engine
@@ -141,9 +142,10 @@ def create_product(product: ProductCreateRequest, db: Session = Depends(get_db))
     #             })
     db.execute(query, product.model_dump())
     db.commit()
+    return {'Product title': product.title}
 
 # PUT apis
-@app.post("/api/products/{id}")
+@app.put("/api/products/{id}")
 def create_product(id: int, product: ProductCreateRequest, db: Session = Depends(get_db)):
     query = text("""
     UPDATE products
@@ -151,15 +153,19 @@ def create_product(id: int, product: ProductCreateRequest, db: Session = Depends
                     summary = :summary,
                     price = :price,
                     quantity = :quantity,
-                    description: description
+                    description = :description
                  WHERE
                     id = :id
     """)
     values = product.dict()
     values['id'] = id
-    db.execute(query, values)
-    db.commit()
-
+    try:
+        db.execute(query, values)
+        db.commit()
+        return {'message': f"Product with id {id} updated successful."}
+    except SQLAlchemyError as e:
+        db.rollback()
+        return {'error': str(e)}
 # DELETE apis
 @app.delete("/api/products/{id}")
 def delete_product(id: int, db: Session = Depends(get_db)):
@@ -167,8 +173,14 @@ def delete_product(id: int, db: Session = Depends(get_db)):
                 DELETE FROM products
                 WHERE id = :id
     """)
-    db.execute(query, {"id": id})
-    db.commit()
+    try:
+        db.execute(query, {"id": id})
+        db.commit()
+        return {'message': f"Product with id {id} being deleted successfully"}
+    except SQLAlchemyError as e:
+        db.rollback()
+        return {'error': str(e)}
+
 
 #### In terms of database, in general, most ecommerce website creates its database by manually setting up in 
 # database with SQL query instead of using ORM models, because when the application grows,

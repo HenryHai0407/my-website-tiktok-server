@@ -12,11 +12,12 @@ app.include_router(order_controller.router)
 app.include_router(auth_controller.router)
 app.include_router(user_controller.router)
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/")
 async def index(request: Request):
-    infor = {
+    return {
         "name": "Hoang Hai",
         "age": 28,
         "skills": ["Python","FastAPI","Database"]
     }
+    
 

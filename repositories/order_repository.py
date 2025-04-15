@@ -22,7 +22,7 @@ class OrderRepository:
 
     def get_list(self) -> List[OrderModel]:
         statement = select(OrderModel)
-        result = self.db.exec(statement)
+        result = self.db.execute(statement)
         return result.all()
 
     def get_by_id(self, id: int) -> OrderModel:

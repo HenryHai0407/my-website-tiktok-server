@@ -23,17 +23,17 @@ class UserRepository:
     def get_by_username(self, username: str) -> UserModel | None:
         statement = select(UserModel).join(
             AuthModel).where(AuthModel.username == username)
-        model = self.db.exec(statement).first()
+        model = self.db.execute(statement).first()
         return model
     
     def get_list(self) -> List[UserModel]:
         statement = select(UserModel).join(AuthModel).where(
             AuthModel.delete_flg == False, AuthModel.is_active == True)
-        return self.db.exec(statement).all()
+        return self.db.execute(statement).all()
     
     def get_by_id(self, id: int) -> UserModel:
         statement = select(UserModel).join(AuthModel).where(UserModel.id == id)
-        return self.db.exec(statement).one()
+        return self.db.execute(statement).one()
     
     def update(self, model: UserModel) -> UserModel:
         self.db.commit()

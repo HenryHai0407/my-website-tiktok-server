@@ -8,7 +8,7 @@ class CategoryRepository:
 
     def get_list(self) -> List[CategoryModel]:
         statement = select(CategoryModel)
-        result = self.db.exec(statement)
+        result = self.db.execute(statement).scalars() # scalars() make SQLModel return just the model, not a tuple.
         return result.all()
 
     def get_by_id(self, id: int) -> CategoryModel:

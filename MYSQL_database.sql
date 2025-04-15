@@ -18,7 +18,7 @@ CREATE TABLE products (
     stock INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     -- Define foreign key to categories
-    CONSTRAINT fk_products_category FOREGIN KEY (category_id)
+    CONSTRAINT fk_products_category FOREIGN KEY (category_id)
         REFERENCES categories(id)
         ON UPDATE CASCADE ON DELETE RESTRICT
 )
@@ -45,7 +45,7 @@ CREATE TABLE orders (
     order_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     status ENUM('pending','completed','canceled','shipped','returned') DEFAULT 'pending',
     total DECIMAL(10,2) DEFAULT 0,
-    CONSTRAINT fk_orders_customer FOREGIN KEY (customer_id)
+    CONSTRAINT fk_orders_customer FOREIGN KEY (customer_id)
         REFERENCES customers(id)
         ON UPDATE CASCADE ON DELETE CASCADE
 )

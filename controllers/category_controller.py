@@ -1,38 +1,44 @@
-# app/controllers/category_controller.py
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from services import category_service
-from database import get_db
-from models.category_dto import CategoryCreate, CategoryUpdate, CategoryResponse
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.security import HTTPBearer
+from sqlmodel import Session
+from models.category_model import CategoryDTO, CategoryDTOCreate, CategoryDTOUpdate
+from services.category_service import CategoryService
+from database import  get_db_session
 from typing import List
 
-router = APIRouter(prefix="/categories", tags=["Categories"])
+router = APIRouter(
+    prefix="/categories",
+    tags=["Categories"],
+    # dependencies=[Depends(HTTPBearer())]
+)
 
-@router.post("/", response_model=CategoryResponse)
-def create_category(category: CategoryCreate, db: Session = Depends(get_db)):
-    return category_service.create_category(db, category)
 
-@router.get("/", response_model=List[CategoryResponse])
-def get_all(db: Session = Depends(get_db)):
-    return category_service.get_categories(db)
+@router.get("/", response_model=List[CategoryDTO])
+def get_list(request: Request, db: Session = Depends(get_db_session)):
+    # print(request.state.user)
+    service = CategoryService(db)
+    return service.get_list()
 
-@router.get("/{category_id}", response_model=CategoryResponse)
-def get_one(category_id: int, db: Session = Depends(get_db)):
-    category = category_service.get_category(db, category_id)
-    if not category:
-        raise HTTPException(status_code=404, detail="Category not found")
-    return category
 
-@router.put("/{category_id}", response_model=CategoryResponse)
-def update(category_id: int, category: CategoryUpdate, db: Session = Depends(get_db)):
-    updated = category_service.update_category(db, category_id, category)
-    if not updated:
-        raise HTTPException(status_code=404, detail="Category not found")
-    return updated
+@router.get("/{id}", response_model=CategoryDTO)
+def get_by_id(request: Request, id: int, db: Session = Depends(get_db_session)):
+    service = CategoryService(db)
+    return service.get_by_id(id)
 
-@router.delete("/{category_id}")
-def delete(category_id: int, db: Session = Depends(get_db)):
-    deleted = category_service.delete_category(db, category_id)
-    if not deleted:
-        raise HTTPException(status_code=404, detail="Category not found")
-    return {"message": f"Category with ID {category_id} deleted."}
+
+@router.post("/", dependencies=[Depends(HTTPBearer())], response_model=CategoryDTO)
+def create(request: Request, req: CategoryDTOCreate, db: Session = Depends(get_db_session)):
+    service = CategoryService(db)
+    return service.create(req)
+
+
+@router.put("/{id}", dependencies=[Depends(HTTPBearer())], response_model=CategoryDTO)
+def update_product(request: Request, id: int, req: CategoryDTOUpdate, db: Session = Depends(get_db_session)):
+    service = CategoryService(db)
+    return service.update(id, req)
+
+
+@router.delete("/{id}", dependencies=[Depends(HTTPBearer())])
+def delete(request: Request, id: int, db: Session = Depends(get_db_session)):
+    service = CategoryService(db)
+    return service.delete(id)

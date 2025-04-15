@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from database import get_db, Base, engine
 from models import User, Order
-from schemas import UserCreate, UserOut, OrderCreate, OrderOut
-from auth import get_password_hash, get_current_user, verify_password, create_access_token
+from initial.schemas import UserCreate, UserOut, OrderCreate, OrderOut
+from initial.auth import get_password_hash, get_current_user, verify_password, create_access_token
 from fastapi.security import OAuth2PasswordRequestForm
 
 class ProductModel(BaseModel):

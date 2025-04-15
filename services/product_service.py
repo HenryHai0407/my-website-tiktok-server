@@ -1,18 +1,46 @@
-from sqlalchemy.orm import Session
-import repositories.product_repo as product_repo
-from models.product_dto import ProductCreate, ProductUpdate
+from sqlmodel import Session
+from models.product_model import ProductModel, ProductDTO, ProductDTOCreate, ProductDTOUpdate
+from repositories.product_repository import ProductRepository
+from typing import List
+# from exceptions.custom_exception import AppException, ExceptionType
 
-def get_products(db: Session):
-    return product_repo.get_all_products(db)
 
-def get_product(db: Session, product_id: int):
-    return product_repo.get_product_by_id(db, product_id)
+class ProductService:
+    def __init__(self, db: Session) -> None:
+        self.db = db
+        self.repo = ProductRepository(self.db)
 
-def create_product(db: Session, product: ProductCreate):
-    return product_repo.create_product(db, product)
+    def get_list(self) -> List[ProductDTO]:
+        models = self.repo.get_list()
+        return [ProductDTO.model_validate(model) for model in models]
 
-def update_product(db: Session, product_id: int, product: ProductUpdate):
-    return product_repo.update_product(db, product_id, product)
+    def get_by_id(self, id: int) -> ProductDTO:
+        model = self.repo.get_by_id(id)
+        # if not model:
+        #     raise AppException(ExceptionType.NOT_FOUND)
 
-def delete_product(db: Session, product_id: int):
-    return product_repo.delete_product(db, product_id)
+        return ProductDTO.model_validate(model)
+
+    def create(self, dto: ProductDTOCreate) -> ProductDTO:
+        model = ProductModel(**dto.model_dump())
+        model_id = self.repo.create(model)
+        model.id = model_id
+        return ProductDTO.model_validate(model)
+
+    def update(self, id: int, dto: ProductDTOUpdate) -> ProductDTO:
+        model = self.repo.get_by_id(id)
+        # if not model:
+        #     raise AppException(ExceptionType.NOT_FOUND)
+
+        for field, value in dto.model_dump(exclude_unset=True).items():
+            setattr(model, field, value)
+        self.repo.update(model)
+
+        return ProductDTO.model_validate(model)
+
+    def delete(self, id: int) -> None:
+        model = self.repo.get_by_id(id)
+        # if not model:
+        #     raise AppException(ExceptionType.NOT_FOUND)
+
+        return self.repo.delete(model)

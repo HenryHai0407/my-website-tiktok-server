@@ -1,14 +1,22 @@
 # main.py
 from fastapi import FastAPI
-from controllers import category_controller, product_controller
-from database import Base, engine
-from repositories import category_repo, product_repo
+from controllers import category_controller, product_controller, order_controller, auth_controller, user_controller
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
 
 app = FastAPI(title="FastAPI Store")
 
-# Reflect table metadata
-category_repo.bind_tables(engine)  # Bind the SQLAlchemy Core metadata
-product_repo.bind_product_table(engine)
-
 app.include_router(category_controller.router)
 app.include_router(product_controller.router)
+app.include_router(order_controller.router)
+app.include_router(auth_controller.router)
+app.include_router(user_controller.router)
+
+@app.get("/", response_class=HTMLResponse)
+async def index(request: Request):
+    infor = {
+        "name": "Hoang Hai",
+        "age": 28,
+        "skills": ["Python","FastAPI","Database"]
+    }
+

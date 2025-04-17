@@ -17,7 +17,7 @@ async def index(request: Request):
     return {
         "name": "Hoang Hai",
         "age": 28,
-        "skills": ["Python","FastAPI","Database"]
+        "skills": ["Python","FastAPI","Database","Docker"]
     }
     
 

@@ -5,6 +5,7 @@ from controllers import (
     user_controller,
     auth_controller,
     order_controller,
+    cart_controller
 )
 
 routes = APIRouter(
@@ -16,3 +17,4 @@ routes.include_router(category_controller.router)
 routes.include_router(user_controller.router)
 routes.include_router(auth_controller.router)
 routes.include_router(order_controller.router)
+routes.include_router(cart_controller.router)

@@ -13,6 +13,7 @@ class OrderItemModel(SQLModel, table=True):
 
     quantity: int
     unit_price: float
+    total_price: Optional[float] = None
     description: Optional[str] = None
 
     delete_flg: bool = False

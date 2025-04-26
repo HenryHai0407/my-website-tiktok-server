@@ -1,7 +1,6 @@
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List
 from models.order_item_model import OrderItemModel, OrderItemDTO
-from pydantic import BaseModel
 
 
 class OrderModel(SQLModel, table=True):
@@ -16,7 +15,7 @@ class OrderModel(SQLModel, table=True):
     items: List["OrderItemModel"] = Relationship(back_populates="order")
 
 
-class OrderBase(BaseModel):
+class OrderBase(SQLModel):
     customer_id: int
     user_id: Optional[int] = None
     description: Optional[str] = None
@@ -33,7 +32,7 @@ class OrderDTO(OrderBase):
     items: List[OrderItemDTO]
 
 
-class OrderDTOCreateItem(BaseModel):
+class OrderDTOCreateItem(SQLModel):
     product_id: int
     quantity: int
     unit_price: float
@@ -42,3 +41,11 @@ class OrderDTOCreateItem(BaseModel):
 
 class OrderDTOCreate(OrderBase):
     items: List[OrderDTOCreateItem]
+
+class AddToCartDTO(SQLModel):
+    customer_id: int
+    product_id: int
+    quantity: int = 1 # default quantity is 1 if not specified
+
+class CheckoutCartDTO(SQLModel):
+    customer_id: int
